@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Outputs
+ai-service/outputs/
+ai-service/models/
+ai-service/runs/
+ai-service/checkpoints/
+
+# Dataset
+data/Tongji/session1/
+data/Tongji/session2/
+data/Tongji/*.csv
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Environment files
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
