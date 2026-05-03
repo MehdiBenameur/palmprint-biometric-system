@@ -10,7 +10,7 @@ sys.path.append(str(AI_ROOT / "src"))
 from finetuned_embedding_extractor import FineTunedEmbeddingExtractor
 
 ROI_ROOT = AI_ROOT / "outputs" / "roi_dataset_v1"
-MODEL_PATH = AI_ROOT / "outputs" / "models" / "mobilenet_best.pth"
+MODEL_PATH = AI_ROOT / "outputs" / "models" / "mobilenet_improved_best.pth"
 OUTPUT_DIR = AI_ROOT / "outputs" / "finetuned_embeddings"
 
 def main():
