@@ -12,7 +12,7 @@ sys.path.append(str(AI_ROOT / "src"))
 
 from palm_dataset import PalmRoiDataset
 
-ROI_ROOT = AI_ROOT / "outputs" / "roi_dataset_v1"
+ROI_ROOT = AI_ROOT / "outputs" / "roi_dataset_v6"
 MODEL_DIR = AI_ROOT / "outputs" / "models"
 
 NUM_CLASSES = 600
@@ -184,11 +184,11 @@ def main():
             "num_classes": NUM_CLASSES,
         }
 
-        torch.save(checkpoint, MODEL_DIR / "mobilenet_improved_last.pth")
+        torch.save(checkpoint, MODEL_DIR / "mobilenet_v6_last.pth.pth")
 
         if test_acc > best_acc:
             best_acc = test_acc
-            torch.save(checkpoint, MODEL_DIR / "mobilenet_improved_best.pth")
+            torch.save(checkpoint, MODEL_DIR / "mobilenet_v6_best.pth.pth")
             print(f"New best model saved with accuracy: {best_acc:.4f}")
 
     print(f"\nTraining finished. Best test accuracy: {best_acc:.4f}")

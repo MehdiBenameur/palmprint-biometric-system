@@ -13,7 +13,7 @@ from roi_extractor import PalmRoiExtractor
 DATASET_ROOT = PROJECT_ROOT / "data" / "Tongji"
 INDEX_CSV = DATASET_ROOT / "tongji_index.csv"
 
-OUTPUT_ROOT = AI_ROOT / "outputs" / "roi_dataset_v1"
+OUTPUT_ROOT = AI_ROOT / "outputs" / "roi_dataset_v6"
 
 def main():
     df = pd.read_csv(INDEX_CSV)
