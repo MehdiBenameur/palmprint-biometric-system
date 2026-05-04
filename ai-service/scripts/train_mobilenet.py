@@ -184,11 +184,11 @@ def main():
             "num_classes": NUM_CLASSES,
         }
 
-        torch.save(checkpoint, MODEL_DIR / "mobilenet_v3_last.pth.pth")
+        torch.save(checkpoint, MODEL_DIR / "mobilenet_v3_last.pth")
 
         if test_acc > best_acc:
             best_acc = test_acc
-            torch.save(checkpoint, MODEL_DIR / "mobilenet_v3_best.pth.pth")
+            torch.save(checkpoint, MODEL_DIR / "mobilenet_v3_best.pth")
             print(f"New best model saved with accuracy: {best_acc:.4f}")
 
     print(f"\nTraining finished. Best test accuracy: {best_acc:.4f}")
