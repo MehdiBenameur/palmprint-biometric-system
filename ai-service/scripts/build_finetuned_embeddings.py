@@ -9,9 +9,9 @@ sys.path.append(str(AI_ROOT / "src"))
 
 from finetuned_embedding_extractor import FineTunedEmbeddingExtractor
 
-ROI_ROOT = AI_ROOT / "outputs" / "roi_dataset_v1"
-MODEL_PATH = AI_ROOT / "outputs" / "models" / "mobilenet_improved_best.pth"
-OUTPUT_DIR = AI_ROOT / "outputs" / "finetuned_embeddings"
+ROI_ROOT = AI_ROOT / "outputs" / "roi_dataset_v3"
+MODEL_PATH = AI_ROOT / "outputs" / "models" / "mobilenet_v3_best.pth"
+OUTPUT_DIR = AI_ROOT / "outputs" / "finetuned_embeddings_v3"
 
 def main():
     device = "cuda" if False else "cpu"

@@ -1,10 +1,9 @@
 from pathlib import Path
 import numpy as np
-from tqdm import tqdm
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 AI_ROOT = PROJECT_ROOT / "ai-service"
-EMB_DIR = AI_ROOT / "outputs" / "embeddings"
+EMB_DIR = AI_ROOT / "outputs" / "finetuned_embeddings_v3"
 
 def l2_normalize(x):
     return x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-12)
@@ -13,42 +12,38 @@ def main():
     gallery = np.load(EMB_DIR / "gallery.npy", allow_pickle=True)
     query = np.load(EMB_DIR / "query.npy", allow_pickle=True)
 
-    palm_ids = sorted(set(int(g["palm_id"]) for g in gallery))
-
-    prototypes = []
-    prototype_ids = []
-
-    for palm_id in palm_ids:
-        embs = np.array([g["embedding"] for g in gallery if int(g["palm_id"]) == palm_id])
-        proto = embs.mean(axis=0)
-        prototypes.append(proto)
-        prototype_ids.append(palm_id)
-
-    prototypes = l2_normalize(np.array(prototypes))
-    prototype_ids = np.array(prototype_ids)
+    gallery_embeddings = l2_normalize(np.array([g["embedding"] for g in gallery]))
+    gallery_ids = np.array([int(g["palm_id"]) for g in gallery])
 
     query_embeddings = l2_normalize(np.array([q["embedding"] for q in query]))
     query_ids = np.array([int(q["palm_id"]) for q in query])
 
-    scores = query_embeddings @ prototypes.T
-    best_indices = np.argmax(scores, axis=1)
-    predicted_ids = prototype_ids[best_indices]
+    scores = query_embeddings @ gallery_embeddings.T
 
-    correct = predicted_ids == query_ids
-    accuracy = correct.mean()
+    top1_indices = np.argmax(scores, axis=1)
+    top1_ids = gallery_ids[top1_indices]
+    top1_scores = scores[np.arange(len(query_ids)), top1_indices]
 
-    print(f"Total queries: {len(query_ids)}")
-    print(f"Correct: {correct.sum()}")
-    print(f"Accuracy: {accuracy:.4f}")
-
+    top3_indices = np.argsort(scores, axis=1)[:, -3:]
     top5_indices = np.argsort(scores, axis=1)[:, -5:]
-    top5_ids = prototype_ids[top5_indices]
-    top5_correct = np.array([
-        query_ids[i] in top5_ids[i]
-        for i in range(len(query_ids))
-    ])
+    top10_indices = np.argsort(scores, axis=1)[:, -10:]
 
-    print(f"Top-5 Accuracy: {top5_correct.mean():.4f}")
+    top1_acc = (top1_ids == query_ids).mean()
+    top3_acc = np.mean([query_ids[i] in gallery_ids[top3_indices[i]] for i in range(len(query_ids))])
+    top5_acc = np.mean([query_ids[i] in gallery_ids[top5_indices[i]] for i in range(len(query_ids))])
+    top10_acc = np.mean([query_ids[i] in gallery_ids[top10_indices[i]] for i in range(len(query_ids))])
+
+    print(f"Embeddings directory: {EMB_DIR}")
+    print(f"Total gallery: {len(gallery_ids)}")
+    print(f"Total queries: {len(query_ids)}")
+    print(f"Top-1 Accuracy:  {top1_acc:.4f}")
+    print(f"Top-3 Accuracy:  {top3_acc:.4f}")
+    print(f"Top-5 Accuracy:  {top5_acc:.4f}")
+    print(f"Top-10 Accuracy: {top10_acc:.4f}")
+    print()
+    print(f"Mean Top-1 Score: {top1_scores.mean():.4f}")
+    print(f"Min Top-1 Score:  {top1_scores.min():.4f}")
+    print(f"Max Top-1 Score:  {top1_scores.max():.4f}")
 
 if __name__ == "__main__":
     main()
