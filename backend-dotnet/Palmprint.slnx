@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Palmprint.Api/Palmprint.Api.csproj" />
+  <Project Path="Palmprint.Application/Palmprint.Application.csproj" />
+  <Project Path="Palmprint.Domain/Palmprint.Domain.csproj" />
+  <Project Path="Palmprint.Infrastructure/Palmprint.Infrastructure.csproj" />
+</Solution>

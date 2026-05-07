@@ -4,21 +4,27 @@ import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 
-class ResNetEmbeddingExtractor:
+class FineTunedDenseNetEmbeddingExtractor:
     def __init__(self, model_path, device="cpu", num_classes=600):
         self.device = device
 
-        self.model = models.resnet18(weights=None)
-        in_features = self.model.fc.in_features
-        self.model.fc = nn.Sequential(
-            nn.Dropout(0.4),
-            nn.Linear(in_features, num_classes)
-        )
+        self.model = models.densenet121(weights=None)
+
+        in_features = self.model.classifier.in_features
+        self.model.classifier = nn.Linear(in_features, num_classes)
 
         checkpoint = torch.load(model_path, map_location=self.device)
         self.model.load_state_dict(checkpoint["model_state_dict"])
 
-        self.feature_extractor = nn.Sequential(*list(self.model.children())[:-1])
+        self.feature_extractor = nn.Sequential(
+            self.model.features,
+            nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool2d((1, 1))
+        )
+
+        self.model.to(self.device)
+        self.model.eval()
+
         self.feature_extractor.to(self.device)
         self.feature_extractor.eval()
 
@@ -26,7 +32,7 @@ class ResNetEmbeddingExtractor:
             transforms.Resize((128, 128)),
             transforms.Grayscale(num_output_channels=3),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
         ])
 
     def extract(self, image_path):

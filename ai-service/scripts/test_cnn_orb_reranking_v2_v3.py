@@ -7,30 +7,35 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 AI_ROOT = PROJECT_ROOT / "ai-service"
 EMB_DIR = AI_ROOT / "outputs" / "finetuned_embeddings_v3"
 
-TOP_K = 5
-ALPHA = 0.6
-BETA = 0.4
+TOP_K = 10
+ALPHA = 0.5
+BETA = 0.5
+ORB_FEATURES = 700
 
 def l2_normalize(x):
     return x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-12)
 
-def orb_match_score_v2(img1_path, img2_path):
-    img1 = cv2.imread(str(img1_path), cv2.IMREAD_GRAYSCALE)
-    img2 = cv2.imread(str(img2_path), cv2.IMREAD_GRAYSCALE)
+def extract_orb_features(image_path, orb):
+    image = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
 
-    if img1 is None or img2 is None:
+    if image is None:
+        return [], None
+
+    keypoints, descriptors = orb.detectAndCompute(image, None)
+
+    if descriptors is None or len(keypoints) == 0:
+        return [], None
+
+    return keypoints, descriptors
+
+def orb_score_from_descriptors(kp1, des1, kp2, des2):
+    if des1 is None or des2 is None:
         return 0.0
 
-    orb = cv2.ORB_create(nfeatures=700)
-
-    kp1, des1 = orb.detectAndCompute(img1, None)
-    kp2, des2 = orb.detectAndCompute(img2, None)
-
-    if des1 is None or des2 is None or len(kp1) == 0 or len(kp2) == 0:
+    if len(kp1) == 0 or len(kp2) == 0:
         return 0.0
 
     matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
-
     knn_matches = matcher.knnMatch(des1, des2, k=2)
 
     good_matches = []
@@ -70,19 +75,35 @@ def main():
 
     cnn_scores = query_embeddings @ gallery_embeddings.T
 
+    orb = cv2.ORB_create(nfeatures=ORB_FEATURES)
+
+    print("Caching ORB features for gallery...")
+    gallery_orb_cache = []
+    for path in tqdm(gallery_paths, desc="Gallery ORB cache"):
+        gallery_orb_cache.append(extract_orb_features(path, orb))
+
+    print("Caching ORB features for queries...")
+    query_orb_cache = []
+    for path in tqdm(query_paths, desc="Query ORB cache"):
+        query_orb_cache.append(extract_orb_features(path, orb))
+
     correct = 0
 
-    for i in tqdm(range(len(query_ids)), desc="CNN + ORB reranking v2"):
+    for i in tqdm(range(len(query_ids)), desc="CNN + ORB reranking final"):
         q_scores = cnn_scores[i]
 
-        topk_indices = np.argsort(q_scores)[-TOP_K:]
+        topk_indices = np.argsort(-q_scores)[:TOP_K]
+
+        q_kp, q_des = query_orb_cache[i]
 
         best_final_score = -1.0
         best_id = None
 
         for idx in topk_indices:
             cnn_score = float(q_scores[idx])
-            orb_score = orb_match_score_v2(query_paths[i], gallery_paths[idx])
+
+            g_kp, g_des = gallery_orb_cache[idx]
+            orb_score = orb_score_from_descriptors(q_kp, q_des, g_kp, g_des)
 
             final_score = ALPHA * cnn_score + BETA * orb_score
 
@@ -99,7 +120,8 @@ def main():
     print(f"TOP_K: {TOP_K}")
     print(f"ALPHA: {ALPHA}")
     print(f"BETA: {BETA}")
-    print(f"CNN + ORB Re-ranking V2 Accuracy: {acc:.4f}")
+    print(f"ORB_FEATURES: {ORB_FEATURES}")
+    print(f"CNN + ORB Re-ranking Final Accuracy: {acc:.4f}")
 
 if __name__ == "__main__":
     main()

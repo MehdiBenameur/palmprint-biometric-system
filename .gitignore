@@ -36,3 +36,9 @@ obj/
 # OS
 .DS_Store
 Thumbs.db
+
+outputs/
+*.pth
+*.npy
+*.rar
+*.zip

@@ -3,7 +3,7 @@ import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 AI_ROOT = PROJECT_ROOT / "ai-service"
-EMB_DIR = AI_ROOT / "outputs" / "finetuned_embeddings"
+EMB_DIR = AI_ROOT / "outputs" / "triplet_embeddings_v3"
 
 def l2_normalize(x):
     return x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-12)
@@ -24,16 +24,29 @@ def main():
     top1_ids = gallery_ids[top1_indices]
     top1_scores = scores[np.arange(len(query_ids)), top1_indices]
 
+    top3_indices = np.argsort(-scores, axis=1)[:, :3]
+    top5_indices = np.argsort(-scores, axis=1)[:, :5]
+    top10_indices = np.argsort(-scores, axis=1)[:, :10]
+
     top1_acc = (top1_ids == query_ids).mean()
 
-    top3_indices = np.argsort(scores, axis=1)[:, -3:]
-    top5_indices = np.argsort(scores, axis=1)[:, -5:]
-    top10_indices = np.argsort(scores, axis=1)[:, -10:]
+    top3_acc = np.mean([
+        query_ids[i] in gallery_ids[top3_indices[i]]
+        for i in range(len(query_ids))
+    ])
 
-    top3_acc = np.mean([query_ids[i] in gallery_ids[top3_indices[i]] for i in range(len(query_ids))])
-    top5_acc = np.mean([query_ids[i] in gallery_ids[top5_indices[i]] for i in range(len(query_ids))])
-    top10_acc = np.mean([query_ids[i] in gallery_ids[top10_indices[i]] for i in range(len(query_ids))])
+    top5_acc = np.mean([
+        query_ids[i] in gallery_ids[top5_indices[i]]
+        for i in range(len(query_ids))
+    ])
 
+    top10_acc = np.mean([
+        query_ids[i] in gallery_ids[top10_indices[i]]
+        for i in range(len(query_ids))
+    ])
+
+    print(f"Embeddings directory: {EMB_DIR}")
+    print(f"Total gallery: {len(gallery_ids)}")
     print(f"Total queries: {len(query_ids)}")
     print(f"Top-1 Accuracy:  {top1_acc:.4f}")
     print(f"Top-3 Accuracy:  {top3_acc:.4f}")
