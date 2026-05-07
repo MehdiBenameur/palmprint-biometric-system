@@ -11,6 +11,8 @@ public class PalmTemplate : BaseEntity
     public string EmbeddingHash { get; set; } = string.Empty;
 
     public string ModelVersion { get; set; } = string.Empty;
+    public string TemplateVersion { get; set; } = "v1";
+
     public double QualityScore { get; set; }
 
     public bool IsActive { get; set; } = true;
