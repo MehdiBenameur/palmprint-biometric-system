@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Palmprint.Api.Models;
 using Palmprint.Application.DTOs;
 using Palmprint.Application.Interfaces;
-using Palmprint.Api.Models;
 
 namespace Palmprint.Api.Controllers;
 
@@ -20,25 +20,57 @@ public class EnrollmentController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Enroll([FromForm] EnrollFormRequest form)
     {
+        if (form.TenantId == Guid.Empty)
+            return BadRequest("TenantId is required.");
+
+        if (string.IsNullOrWhiteSpace(form.FullName))
+            return BadRequest("FullName is required.");
+
+        if (string.IsNullOrWhiteSpace(form.ExternalId))
+            return BadRequest("ExternalId is required.");
+
         if (form.Image == null || form.Image.Length == 0)
-        {
             return BadRequest("Image is required.");
-        }
 
-        using var memoryStream = new MemoryStream();
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif" };
+        var extension = Path.GetExtension(form.Image.FileName).ToLowerInvariant();
 
-        await form.Image.CopyToAsync(memoryStream);
+        if (!allowedExtensions.Contains(extension))
+            return BadRequest("Invalid image format. Allowed formats: jpg, jpeg, png, bmp, tiff, tif.");
 
-        var request = new EnrollRequest
+        const long maxFileSize = 5 * 1024 * 1024;
+
+        if (form.Image.Length > maxFileSize)
+            return BadRequest("Image size exceeds the maximum allowed size of 5 MB.");
+
+        try
         {
-            TenantId = form.TenantId,
-            FullName = form.FullName,
-            ExternalId = form.ExternalId,
-            ImageBytes = memoryStream.ToArray()
-        };
+            using var memoryStream = new MemoryStream();
+            await form.Image.CopyToAsync(memoryStream);
 
-        var response = await _enrollmentService.EnrollAsync(request);
+            var request = new EnrollRequest
+            {
+                TenantId = form.TenantId,
+                FullName = form.FullName,
+                ExternalId = form.ExternalId,
+                ImageBytes = memoryStream.ToArray()
+            };
 
-        return Ok(response);
+            var response = await _enrollmentService.EnrollAsync(request);
+
+            return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch
+        {
+            return StatusCode(500, "An unexpected error occurred during enrollment.");
+        }
     }
 }
