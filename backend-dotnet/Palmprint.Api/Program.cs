@@ -19,7 +19,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
-builder.Services.AddScoped<IAiServiceClient, FakeAiServiceClient>();
+builder.Services.AddHttpClient<IAiServiceClient, HttpAiServiceClient>();
 builder.Services.AddScoped<ITemplateSecurityService, TemplateSecurityService>();
 builder.Services.AddScoped<IOperationLogger, OperationLogger>();
 

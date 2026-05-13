@@ -55,8 +55,12 @@ public class EnrollmentService : IEnrollmentService
 
             var aiResult = await _aiServiceClient.GenerateEmbeddingAsync(request.ImageBytes);
 
-            var encryptedEmbedding = _templateSecurityService.EncryptEmbedding(aiResult.Embedding);
-            var embeddingHash = _templateSecurityService.HashEmbedding(aiResult.Embedding);
+            var combinedEmbedding = aiResult.CnnEmbedding
+                .Concat(aiResult.TripletEmbedding)
+                .ToArray();
+
+            var encryptedEmbedding = _templateSecurityService.EncryptEmbedding(combinedEmbedding);
+            var embeddingHash = _templateSecurityService.HashEmbedding(combinedEmbedding);
 
             var template = new PalmTemplate
             {
