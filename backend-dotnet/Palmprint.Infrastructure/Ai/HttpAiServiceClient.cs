@@ -29,9 +29,14 @@ public class HttpAiServiceClient : IAiServiceClient
             content
         );
 
-        response.EnsureSuccessStatusCode();
-
         var json = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"AI Service Error: {json}"
+            );
+        }
 
         var result = JsonConvert.DeserializeObject<GenerateEmbeddingResponse>(json);
 
