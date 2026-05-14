@@ -14,5 +14,9 @@ public class IdentifyResponse
 
     public string Message { get; set; } = string.Empty;
 
+    public double ScoreGap { get; set; }
+    public double Threshold { get; set; }
+    public double GapThreshold { get; set; }
+
     public List<IdentifyCandidateDto> TopCandidates { get; set; } = new();
 }

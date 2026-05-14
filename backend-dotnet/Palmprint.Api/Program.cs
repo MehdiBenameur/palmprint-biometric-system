@@ -23,6 +23,7 @@ builder.Services.AddHttpClient<IAiServiceClient, HttpAiServiceClient>();
 builder.Services.AddScoped<ITemplateSecurityService, TemplateSecurityService>();
 builder.Services.AddScoped<IOperationLogger, OperationLogger>();
 builder.Services.AddScoped<IIdentificationRepository, IdentificationRepository>();
+builder.Services.AddScoped<IIdentificationService, IdentificationService>();
 
 var app = builder.Build();
 
